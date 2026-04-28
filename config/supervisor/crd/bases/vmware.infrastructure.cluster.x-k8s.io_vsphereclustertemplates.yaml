@@ -64,6 +64,13 @@ spec:
                             format: int32
                             type: integer
                         type: object
+                      controlPlaneFailureDomains:
+                        description: controlPlaneFailureDomains defines the list of
+                          failure domains where control plane instances should be
+                          located.
+                        items:
+                          type: string
+                        type: array
                       network:
                         description: network defines the network configuration for
                           the cluster with different network providers.
@@ -190,6 +197,13 @@ spec:
                             minimum: 1
                             type: integer
                         type: object
+                      controlPlaneFailureDomains:
+                        description: controlPlaneFailureDomains defines the list of
+                          failure domains where control plane instances should be
+                          located.
+                        items:
+                          type: string
+                        type: array
                       network:
                         description: network defines the network configuration for
                           the cluster with different network providers.

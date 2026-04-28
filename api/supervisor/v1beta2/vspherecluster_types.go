@@ -166,6 +166,10 @@ type VSphereClusterSpec struct {
 	// network defines the network configuration for the cluster with different network providers.
 	// +optional
 	Network Network `json:"network,omitempty,omitzero"`
+
+	// controlPlaneFailureDomains defines the list of failure domains where control plane instances should be located.
+	// +optional
+	ControlPlaneFailureDomains []string `json:"controlPlaneFailureDomains,omitempty"`
 }
 
 // APIEndpoint represents a reachable Kubernetes API endpoint.

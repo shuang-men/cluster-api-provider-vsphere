@@ -92,6 +92,13 @@ spec:
                             format: int32
                             type: integer
                         type: object
+                      controlPlaneFailureDomains:
+                        description: controlPlaneFailureDomains defines the list of
+                          failure domains where control plane instances should be
+                          located.
+                        items:
+                          type: string
+                        type: array
                       disableClusterModule:
                         description: |-
                           DisableClusterModule is used to explicitly turn off the ClusterModule feature.
@@ -308,6 +315,13 @@ spec:
                             minimum: 1
                             type: integer
                         type: object
+                      controlPlaneFailureDomains:
+                        description: controlPlaneFailureDomains defines the list of
+                          failure domains where control plane instances should be
+                          located.
+                        items:
+                          type: string
+                        type: array
                       disableClusterModule:
                         description: |-
                           disableClusterModule is used to explicitly turn off the ClusterModule feature.

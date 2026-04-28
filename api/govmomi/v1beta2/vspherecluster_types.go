@@ -148,6 +148,10 @@ type VSphereClusterSpec struct {
 	// A valid selector will select all failure domains which match the selector.
 	// +optional
 	FailureDomainSelector *metav1.LabelSelector `json:"failureDomainSelector,omitempty"`
+
+	// controlPlaneFailureDomains defines the list of failure domains where control plane instances should be located.
+	// +optional
+	ControlPlaneFailureDomains []string `json:"controlPlaneFailureDomains,omitempty"`
 }
 
 // ClusterModule holds the anti affinity construct `ClusterModule` identifier

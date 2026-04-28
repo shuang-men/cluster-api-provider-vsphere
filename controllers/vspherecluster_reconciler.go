@@ -414,6 +414,13 @@ func (r *clusterReconciler) reconcileDeploymentZones(ctx context.Context, cluste
 		return true, nil
 	}
 
+	// If there is spec.controlPlaneFailureDomains
+	hasCPFilter := len(clusterCtx.VSphereCluster.Spec.ControlPlaneFailureDomains) > 0
+	cpAllowedZones := make(map[string]struct{})
+	for _, zoneName := range clusterCtx.VSphereCluster.Spec.ControlPlaneFailureDomains {
+		cpAllowedZones[zoneName] = struct{}{}
+	}
+
 	var opts client.ListOptions
 	var err error
 	opts.LabelSelector, err = metav1.LabelSelectorAsSelector(clusterCtx.VSphereCluster.Spec.FailureDomainSelector)
@@ -434,11 +441,17 @@ func (r *clusterReconciler) reconcileDeploymentZones(ctx context.Context, cluste
 			continue
 		}
 
+		cpEnabled := zone.Spec.ControlPlane
+		if ptr.Deref(cpEnabled, true) && hasCPFilter {
+			_, allowed := cpAllowedZones[zone.Name]
+			cpEnabled = ptr.To(allowed)
+		}
+
 		if zone.Status.Ready == nil {
 			readyNotReported++
 			failureDomains = append(failureDomains, clusterv1.FailureDomain{
 				Name:         zone.Name,
-				ControlPlane: zone.Spec.ControlPlane,
+				ControlPlane: cpEnabled,
 			})
 			continue
 		}
@@ -446,7 +459,7 @@ func (r *clusterReconciler) reconcileDeploymentZones(ctx context.Context, cluste
 		if *zone.Status.Ready {
 			failureDomains = append(failureDomains, clusterv1.FailureDomain{
 				Name:         zone.Name,
-				ControlPlane: zone.Spec.ControlPlane,
+				ControlPlane: cpEnabled,
 			})
 			continue
 		}

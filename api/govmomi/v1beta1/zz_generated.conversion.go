@@ -1453,6 +1453,7 @@ func autoConvert_v1beta1_VSphereClusterSpec_To_v1beta2_VSphereClusterSpec(in *VS
 		return err
 	}
 	out.FailureDomainSelector = (*v1.LabelSelector)(unsafe.Pointer(in.FailureDomainSelector))
+	out.ControlPlaneFailureDomains = *(*[]string)(unsafe.Pointer(&in.ControlPlaneFailureDomains))
 	return nil
 }
 
@@ -1478,6 +1479,7 @@ func autoConvert_v1beta2_VSphereClusterSpec_To_v1beta1_VSphereClusterSpec(in *v1
 		return err
 	}
 	out.FailureDomainSelector = (*v1.LabelSelector)(unsafe.Pointer(in.FailureDomainSelector))
+	out.ControlPlaneFailureDomains = *(*[]string)(unsafe.Pointer(&in.ControlPlaneFailureDomains))
 	return nil
 }
 
