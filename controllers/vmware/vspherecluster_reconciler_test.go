@@ -141,6 +141,9 @@ func TestClusterReconciler_getFailureDomains(t *testing.T) {
 		},
 	}
 
+	vsphereCluster := util.CreateVSphereCluster("test-cluster")
+	vsphereCluster.Namespace = namespace.Name
+
 	tests := []struct {
 		name        string
 		objects     []client.Object
@@ -233,7 +236,7 @@ func TestClusterReconciler_getFailureDomains(t *testing.T) {
 					Build(),
 			}
 			utilfeature.SetFeatureGateDuringTest(t, feature.Gates, feature.NamespaceScopedZones, tt.featureGate)
-			got, err := r.getFailureDomains(ctx, namespace.Name)
+			got, err := r.getFailureDomains(ctx, vsphereCluster)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ClusterReconciler.getFailureDomains() error = %v, wantErr %v", err, tt.wantErr)
 				return

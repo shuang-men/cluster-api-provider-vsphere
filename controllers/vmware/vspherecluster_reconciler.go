@@ -237,7 +237,7 @@ func (r *ClusterReconciler) reconcileNormal(ctx context.Context, clusterCtx *vmw
 	log := ctrl.LoggerFrom(ctx)
 
 	// Get any failure domains to report back to the CAPI core controller.
-	failureDomains, err := r.getFailureDomains(ctx, clusterCtx.VSphereCluster.Namespace)
+	failureDomains, err := r.getFailureDomains(ctx, clusterCtx.VSphereCluster)
 	if err != nil {
 		return errors.Wrapf(
 			err,
@@ -510,7 +510,8 @@ func (r *ClusterReconciler) ZoneToVSphereClusters(ctx context.Context, o client.
 
 // Returns the failure domain information discovered on the cluster
 // hosting this controller.
-func (r *ClusterReconciler) getFailureDomains(ctx context.Context, namespace string) ([]clusterv1.FailureDomain, error) {
+func (r *ClusterReconciler) getFailureDomains(ctx context.Context, vpshereCluster *vmwarev1.VSphereCluster) ([]clusterv1.FailureDomain, error) {
+	namespace := vpshereCluster.Namespace
 	failureDomains := []clusterv1.FailureDomain{}
 	// Determine the source of failure domain based on feature gates NamespaceScopedZones.
 	// If NamespaceScopedZones is enabled, use Zone which is Namespace scoped,otherwise use
@@ -522,14 +523,28 @@ func (r *ClusterReconciler) getFailureDomains(ctx context.Context, namespace str
 			return nil, errors.Wrapf(err, "failed to list Zones in namespace %s", namespace)
 		}
 
+		// If there is spec.controlPlaneFailureDomains
+		hasCPFilter := len(vpshereCluster.Spec.ControlPlaneFailureDomains) > 0
+		cpAllowedZones := make(map[string]struct{})
+		for _, zoneName := range vpshereCluster.Spec.ControlPlaneFailureDomains {
+			cpAllowedZones[zoneName] = struct{}{}
+		}
+
 		for _, zone := range zoneList.Items {
 			// Skip zones which are in deletion
 			if !zone.DeletionTimestamp.IsZero() {
 				continue
 			}
+
+			cpEnabled := ptr.To(true)
+			if hasCPFilter {
+				_, allowed := cpAllowedZones[zone.Name]
+				cpEnabled = ptr.To(allowed)
+			}
+
 			failureDomains = append(failureDomains, clusterv1.FailureDomain{
 				Name:         zone.Name,
-				ControlPlane: ptr.To(true),
+				ControlPlane: cpEnabled,
 			})
 		}
 
