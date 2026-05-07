@@ -203,7 +203,7 @@ IMPORT_BOSS_VER := v0.28.1
 IMPORT_BOSS := $(abspath $(TOOLS_BIN_DIR)/$(IMPORT_BOSS_BIN))
 IMPORT_BOSS_PKG := k8s.io/code-generator/cmd/import-boss
 
-CAPI_HACK_TOOLS_VER := 30c4665f2828a74ce404ec1a0abd4e7b959fb799 # Note: this the commit ID of CAPI v1.13.0 + a dependency bump https://github.com/kubernetes-sigs/cluster-api/pull/13601
+CAPI_HACK_TOOLS_VER := 3466e650b30305d4979f314ca7d769a32c5bcefe # Note: this the commit ID of CAPI main 05.05.2026.
 
 BOSKOSCTL_BIN := boskosctl
 BOSKOSCTL := $(abspath $(TOOLS_BIN_DIR)/$(BOSKOSCTL_BIN))
@@ -241,20 +241,16 @@ VCSIM_CONTROLLER_IMG ?= $(REGISTRY)/$(VCSIM_IMAGE_NAME)
 # vmoperator controller
 VM_OPERATOR_DIR := test/infrastructure/vm-operator
 VM_OPERATOR_TMP_DIR ?= $(VM_OPERATOR_DIR)/vm-operator.tmp
-# note: this is the commit from 1.8.6 tag
+# VM_OPERATOR_VERSION ?= 8.0
 # VM_OPERATOR_COMMIT ?= de75746a9505ef3161172d99b735d6593c54f0c5
-# VM_OPERATOR_VERSION ?= v1.8.6-0-gde75746a
-# note: this is the commit we are also importing in go.mod (replace with the actual tag as soon as a tagged release is available)
-VM_OPERATOR_COMMIT ?= 93918c59a71918f6395fd319fa4dd5b9a3f57e24
-VM_OPERATOR_VERSION ?= v1.9.0-567-g93918c59
+# VM_OPERATOR_COMMIT_DESCRIBE ?= v1.8.6-0-gde75746a
+VM_OPERATOR_VERSION ?= 9.1
+VM_OPERATOR_COMMIT ?= 770055883feb2b4f250f6da15fbc53543af5d638
+VM_OPERATOR_COMMIT_DESCRIBE ?= v1.9.0-795-g77005588
 VM_OPERATOR_ALL_ARCH = amd64 arm64
 VM_OPERATOR_IMAGE_NAME ?= extra/vm-operator
 VM_OPERATOR_CONTROLLER_IMG ?= $(STAGING_REGISTRY)/$(VM_OPERATOR_IMAGE_NAME)
 VM_OPERATOR_IMAGE_TAG ?= $(VM_OPERATOR_VERSION)
-DOT:= .
-DASH:= -
-# replace . with -
-VM_OPERATOR_VERSION_WITHOUT_DOTS ?= $(subst $(DOT),$(DASH),$(VM_OPERATOR_VERSION))
 
 # net operator
 NET_OPERATOR_IMAGE_NAME ?= cluster-api-net-operator
@@ -397,7 +393,7 @@ generate-doctoc:
 	TRACE=$(TRACE) ./hack/generate-doctoc.sh
 
 .PHONY: generate-e2e-templates
-generate-e2e-templates: $(KUSTOMIZE) $(addprefix generate-e2e-templates-, v1.13 v1.14 v1.15 main) ## Generate test templates for all branches
+generate-e2e-templates: $(KUSTOMIZE) $(addprefix generate-e2e-templates-, v1.14 v1.15 v1.16 main) ## Generate test templates for all branches
 
 .PHONY: generate-e2e-templates-main
 generate-e2e-templates-main: $(KUSTOMIZE) ## Generate test templates for the main branch
@@ -451,6 +447,14 @@ generate-e2e-templates-main: $(KUSTOMIZE) ## Generate test templates for the mai
 	"$(KUSTOMIZE)" --load-restrictor LoadRestrictionsNone build "$(E2E_SUPERVISOR_TEMPLATE_DIR)/main/fast-rollout" > "$(E2E_SUPERVISOR_TEMPLATE_DIR)/main/cluster-template-fast-rollout-supervisor.yaml"
 	"$(KUSTOMIZE)" --load-restrictor LoadRestrictionsNone build "$(E2E_SUPERVISOR_TEMPLATE_DIR)/main/ownerrefs-finalizers" > "$(E2E_SUPERVISOR_TEMPLATE_DIR)/main/cluster-template-ownerrefs-finalizers-supervisor.yaml"
 
+.PHONY: generate-e2e-templates-v1.16
+generate-e2e-templates-v1.16: $(KUSTOMIZE)
+	"$(KUSTOMIZE)" --load-restrictor LoadRestrictionsNone build "$(E2E_GOVMOMI_TEMPLATE_DIR)/v1.16/clusterclass" > "$(E2E_GOVMOMI_TEMPLATE_DIR)/v1.16/clusterclass-quick-start.yaml"
+	"$(KUSTOMIZE)" --load-restrictor LoadRestrictionsNone build "$(E2E_GOVMOMI_TEMPLATE_DIR)/v1.16/workload" > "$(E2E_GOVMOMI_TEMPLATE_DIR)/v1.16/cluster-template-workload.yaml"
+
+	"$(KUSTOMIZE)" --load-restrictor LoadRestrictionsNone build "$(E2E_SUPERVISOR_TEMPLATE_DIR)/v1.16/clusterclass" > "$(E2E_SUPERVISOR_TEMPLATE_DIR)/v1.16/clusterclass-quick-start-supervisor.yaml"
+	"$(KUSTOMIZE)" --load-restrictor LoadRestrictionsNone build "$(E2E_SUPERVISOR_TEMPLATE_DIR)/v1.16/workload" > "$(E2E_SUPERVISOR_TEMPLATE_DIR)/v1.16/cluster-template-workload-supervisor.yaml"
+
 .PHONY: generate-e2e-templates-v1.15
 generate-e2e-templates-v1.15: $(KUSTOMIZE)
 	"$(KUSTOMIZE)" --load-restrictor LoadRestrictionsNone build "$(E2E_GOVMOMI_TEMPLATE_DIR)/v1.15/clusterclass" > "$(E2E_GOVMOMI_TEMPLATE_DIR)/v1.15/clusterclass-quick-start.yaml"
@@ -466,14 +470,6 @@ generate-e2e-templates-v1.14: $(KUSTOMIZE)
 
 	"$(KUSTOMIZE)" --load-restrictor LoadRestrictionsNone build "$(E2E_SUPERVISOR_TEMPLATE_DIR)/v1.14/clusterclass" > "$(E2E_SUPERVISOR_TEMPLATE_DIR)/v1.14/clusterclass-quick-start-supervisor.yaml"
 	"$(KUSTOMIZE)" --load-restrictor LoadRestrictionsNone build "$(E2E_SUPERVISOR_TEMPLATE_DIR)/v1.14/workload" > "$(E2E_SUPERVISOR_TEMPLATE_DIR)/v1.14/cluster-template-workload-supervisor.yaml"
-
-.PHONY: generate-e2e-templates-v1.13
-generate-e2e-templates-v1.13: $(KUSTOMIZE)
-	"$(KUSTOMIZE)" --load-restrictor LoadRestrictionsNone build "$(E2E_GOVMOMI_TEMPLATE_DIR)/v1.13/clusterclass" > "$(E2E_GOVMOMI_TEMPLATE_DIR)/v1.13/clusterclass-quick-start.yaml"
-	"$(KUSTOMIZE)" --load-restrictor LoadRestrictionsNone build "$(E2E_GOVMOMI_TEMPLATE_DIR)/v1.13/workload" > "$(E2E_GOVMOMI_TEMPLATE_DIR)/v1.13/cluster-template-workload.yaml"
-
-	"$(KUSTOMIZE)" --load-restrictor LoadRestrictionsNone build "$(E2E_SUPERVISOR_TEMPLATE_DIR)/v1.13/clusterclass" > "$(E2E_SUPERVISOR_TEMPLATE_DIR)/v1.13/clusterclass-quick-start-supervisor.yaml"
-	"$(KUSTOMIZE)" --load-restrictor LoadRestrictionsNone build "$(E2E_SUPERVISOR_TEMPLATE_DIR)/v1.13/workload" > "$(E2E_SUPERVISOR_TEMPLATE_DIR)/v1.13/cluster-template-workload-supervisor.yaml"
 
 .PHONY: generate-test-infra-prowjobs
 generate-test-infra-prowjobs: $(PROWJOB_GEN) ## Generates the prowjob configurations in test-infra
@@ -935,6 +931,8 @@ release-vm-operator-local: docker-build-all-vm-operator generate-manifests-vm-op
 .PHONY: checkout-vm-operator
 checkout-vm-operator:
 	@if [ -z "${VM_OPERATOR_VERSION}" ]; then echo "VM_OPERATOR_VERSION is not set"; exit 1; fi
+	@if [ -z "${VM_OPERATOR_COMMIT_DESCRIBE}" ]; then echo "VM_OPERATOR_COMMIT_DESCRIBE is not set"; exit 1; fi
+	@if [ -z "${VM_OPERATOR_COMMIT}" ]; then echo "VM_OPERATOR_COMMIT is not set"; exit 1; fi
 	@if [ -d "$(VM_OPERATOR_TMP_DIR)" ]; then \
 		echo "$(VM_OPERATOR_TMP_DIR) exists, skipping clone"; \
 	else \
@@ -943,46 +941,48 @@ checkout-vm-operator:
 		git checkout "$(VM_OPERATOR_COMMIT)"; \
 	fi
 	@cd "$(ROOT_DIR)/$(VM_OPERATOR_TMP_DIR)"; \
-	if [ "$$(git describe --no-dirty 2> /dev/null)" != "$(VM_OPERATOR_VERSION)" ]; then \
-		if [ "$$(git describe --no-dirty 2> /dev/null)" != "api/$(VM_OPERATOR_VERSION)" ]; then \
-			echo "ERROR: checked out version $$(git describe --no-dirty 2> /dev/null) does not match expected version $(VM_OPERATOR_VERSION) or api/$(VM_OPERATOR_VERSION)"; \
+	if [ "$$(git describe --no-dirty 2> /dev/null)" != "$(VM_OPERATOR_COMMIT_DESCRIBE)" ]; then \
+		if [ "$$(git describe --no-dirty 2> /dev/null)" != "api/$(VM_OPERATOR_COMMIT_DESCRIBE)" ]; then \
+			echo "ERROR: checked out version $$(git describe --no-dirty 2> /dev/null) does not match expected version $(VM_OPERATOR_COMMIT_DESCRIBE) or api/$(VM_OPERATOR_COMMIT_DESCRIBE)"; \
 			exit 1; \
 		fi \
-	fi
+	fi; \
+	echo "Using vm-operator version $(VM_OPERATOR_VERSION), commit $(VM_OPERATOR_COMMIT), build $(VM_OPERATOR_COMMIT_DESCRIBE)";
 
 .PHONY: generate-manifests-vm-operator
 generate-manifests-vm-operator: $(RELEASE_DIR) $(KUSTOMIZE) checkout-vm-operator ## Build the vm-operator manifest yaml file
 	@if [ -z "${VM_OPERATOR_VERSION}" ]; then echo "VM_OPERATOR_VERSION is not set"; exit 1; fi
 	$(MAKE) generate-manifests-vm-operator-$(VM_OPERATOR_VERSION)
 
-generate-manifests-vm-operator-v1.8.6-0-gde75746a:
-	$(KUSTOMIZE) build --load-restrictor LoadRestrictionsNone "$(VM_OPERATOR_TMP_DIR)/config/wcp" > "$(VM_OPERATOR_DIR)/config/$(VM_OPERATOR_VERSION_WITHOUT_DOTS)/vm-operator.yaml"
-	$(KUSTOMIZE) build "$(VM_OPERATOR_DIR)/config/$(VM_OPERATOR_VERSION_WITHOUT_DOTS)" > "$(VM_OPERATOR_DIR)/vm-operator-$(VM_OPERATOR_VERSION).yaml"
+generate-manifests-vm-operator-8.0:
+	$(KUSTOMIZE) build --load-restrictor LoadRestrictionsNone "$(VM_OPERATOR_TMP_DIR)/config/wcp" > "$(VM_OPERATOR_DIR)/config/$(VM_OPERATOR_VERSION)/vm-operator.yaml"
+	$(KUSTOMIZE) build "$(VM_OPERATOR_DIR)/config/$(VM_OPERATOR_VERSION)" > "$(VM_OPERATOR_DIR)/vm-operator-$(VM_OPERATOR_VERSION).yaml"
 
-generate-manifests-vm-operator-v1.9.0-567-g93918c59:
+generate-manifests-vm-operator-9.1:
 	@cd "$(ROOT_DIR)/$(VM_OPERATOR_TMP_DIR)"; \
 	make kustomize-wcp
 	@cd "$(ROOT_DIR)"
-	cp "$(ROOT_DIR)/$(VM_OPERATOR_TMP_DIR)/artifacts/local-deployment.yaml" "$(VM_OPERATOR_DIR)/config/$(VM_OPERATOR_VERSION_WITHOUT_DOTS)/vm-operator.yaml"
-	$(KUSTOMIZE) build "$(VM_OPERATOR_DIR)/config/$(VM_OPERATOR_VERSION_WITHOUT_DOTS)" > "$(VM_OPERATOR_DIR)/vm-operator-$(VM_OPERATOR_VERSION).yaml"
-	$(KUSTOMIZE) build --load-restrictor LoadRestrictionsNone "$(VCSIM_VM_OPERATOR_CRD_ROOT)/$(VM_OPERATOR_VERSION_WITHOUT_DOTS)" > "$(VCSIM_VM_OPERATOR_CRD_ROOT)/vm-operator-$(VM_OPERATOR_VERSION).yaml"
+	cp "$(ROOT_DIR)/$(VM_OPERATOR_TMP_DIR)/artifacts/local-deployment.yaml" "$(VM_OPERATOR_DIR)/config/$(VM_OPERATOR_VERSION)/vm-operator.yaml"
+	$(KUSTOMIZE) build "$(VM_OPERATOR_DIR)/config/$(VM_OPERATOR_VERSION)" > "$(VM_OPERATOR_DIR)/vm-operator-$(VM_OPERATOR_VERSION).yaml"
+	$(KUSTOMIZE) build --load-restrictor LoadRestrictionsNone "$(VCSIM_VM_OPERATOR_CRD_ROOT)/$(VM_OPERATOR_VERSION)" > "$(VCSIM_VM_OPERATOR_CRD_ROOT)/vm-operator-$(VM_OPERATOR_VERSION).yaml"
 
 .PHONY: docker-build-all-vm-operator
 docker-build-all-vm-operator: checkout-vm-operator
 	$(MAKE) docker-build-vm-operator-vm-operator-$(VM_OPERATOR_VERSION)
 
-docker-build-vm-operator-vm-operator-v1.8.6-0-gde75746a:
+# IMPORTANT: before running this command please add --provenance=false to the docker build command in test/infrastructure/vm-operator/vm-operator.tmp/hack/build-container.sh
+docker-build-vm-operator-vm-operator-8.0:
 	@if [ -z "${VM_OPERATOR_IMAGE_TAG}" ]; then echo "VM_OPERATOR_IMAGE_TAG is not set"; exit 1; fi
-	cd $(VM_OPERATOR_TMP_DIR) && \
-	$(MAKE) IMAGE=$(VM_OPERATOR_CONTROLLER_IMG)-amd64 IMAGE_TAG=$(VM_OPERATOR_IMAGE_TAG) GOARCH=amd64 docker-build
+	cd $(VM_OPERATOR_TMP_DIR); \
+	$(MAKE) IMAGE=$(VM_OPERATOR_CONTROLLER_IMG)-amd64 IMAGE_TAG=$(VM_OPERATOR_IMAGE_TAG) GOARCH=amd64 docker-build ; \
 	$(MAKE) IMAGE=$(VM_OPERATOR_CONTROLLER_IMG)-arm64 IMAGE_TAG=$(VM_OPERATOR_IMAGE_TAG) GOARCH=arm64 docker-build
 
-docker-build-vm-operator-vm-operator-v1.9.0-567-g93918c59:
+docker-build-vm-operator-vm-operator-9.1:
 	@if [ -z "${VM_OPERATOR_IMAGE_TAG}" ]; then echo "VM_OPERATOR_IMAGE_TAG is not set"; exit 1; fi
-	cd "$(ROOT_DIR)/$(VM_OPERATOR_TMP_DIR)"; \
-	IMAGE_TAG=$(VM_OPERATOR_IMAGE_TAG) IMAGE=$(VM_OPERATOR_CONTROLLER_IMG)-amd64 IMAGE_FILE=artifacts/vm-operator-amd64.tar make image-build-amd64; \
+	cd $(VM_OPERATOR_TMP_DIR); \
+	IMAGE_TAG=$(VM_OPERATOR_IMAGE_TAG) IMAGE=$(VM_OPERATOR_CONTROLLER_IMG)-amd64 IMAGE_FILE=artifacts/vm-operator-amd64.tar ADDITIONAL_CRI_BUILD_FLAGS="--provenance=false" make image-build-amd64; \
 	docker load -i $(ROOT_DIR)/$(VM_OPERATOR_TMP_DIR)/artifacts/vm-operator-amd64.tar; \
-	IMAGE_TAG=$(VM_OPERATOR_IMAGE_TAG) IMAGE=$(VM_OPERATOR_CONTROLLER_IMG)-arm64 IMAGE_FILE=artifacts/vm-operator-arm64.tar make image-build-arm64; \
+	IMAGE_TAG=$(VM_OPERATOR_IMAGE_TAG) IMAGE=$(VM_OPERATOR_CONTROLLER_IMG)-arm64 IMAGE_FILE=artifacts/vm-operator-arm64.tar ADDITIONAL_CRI_BUILD_FLAGS="--provenance=false" make image-build-arm64; \
 	docker load -i $(ROOT_DIR)/$(VM_OPERATOR_TMP_DIR)/artifacts/vm-operator-arm64.tar
 
 .PHONY: docker-push-all-vm-operator

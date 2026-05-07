@@ -2,12 +2,12 @@ module sigs.k8s.io/cluster-api-provider-vsphere/packaging
 
 go 1.25.0
 
-replace sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v1.13.1-0.20260422095153-30c4665f2828
+replace sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v1.13.0-rc.0.0.20260504113540-3466e650b303
 
 replace sigs.k8s.io/cluster-api-provider-vsphere => ../
 
 require (
-	github.com/onsi/gomega v1.39.1
+	github.com/onsi/gomega v1.40.0
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.10.2
 	k8s.io/api v0.35.4
